@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2009 SZHC Inc. All rights reserved.
+# Copyright (c) 2009 SZHC Inc. GaussCheng<GaussCheng@gmail.com>
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -43,9 +44,11 @@ import sys;
 import getopt
 import fileinput
 import io
-from compiler.ast import Return
+import re
+import chardet
 
 def usage():
+    print("python resttb --input=inputfile --output=outputfile --sep=:")
     print("--input= -i input file")
     print("--output= -o output file")
     print("--sep= -s separate char")
@@ -77,10 +80,18 @@ def main():
             
     print("Begin")
     print("sep = " +  sep)
+    if input_file == None:
+        usage()
+        print("End")
+        return 0
+    
     content_table = []
     for line in fileinput.input(input_file):
-        content_table.append(separate_row(line[:-1], sep))
-    
+        if not is_table_line(line[:-1]):
+            content_table.append(separate_row(line[:-1], sep))
+    if len(content_table) == 0:
+        print("Nothing to generate")
+        return 0
     analyzed_result = analyze(content_table)
     
     out = open(output_file, 'w')
@@ -90,8 +101,8 @@ def main():
     print("End")
 
 def separate_row(text, sep):
-    return text.split(sep)
-
+    return [elem.strip() for elem in text.split(sep) if len(elem) > 0]
+    
 def analyze(text_table):
     col_width = [];
     row = []
@@ -133,14 +144,18 @@ def generate_table_line(col_info, extra_width = 0):
     return ret + "+";
     
 def calculate_text_width(text):
-    unicode_text = unicode(text, 'utf8')
+    print(text, chardet.detect(text))
+    unicode_text = unicode(text, chardet.detect(text)['encoding'])
     ret = 0;
     for c in unicode_text:
-        if 0x2e80 <= ord(c)< 0x9fff:
+        if 0x2E80 <= ord(c) < 0xFFA0:
             ret += 2
         else:
             ret += 1
     return ret
+
+def is_table_line(text):
+    return re.match("[^+^-]+",text) == None
 
 if __name__ == "__main__":
     main()
