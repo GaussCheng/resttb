@@ -43,7 +43,6 @@
 import sys;
 import getopt
 import fileinput
-import io
 import re
 import chardet
 
@@ -57,6 +56,7 @@ def usage():
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hios", ["help", "input=", "output=", "sep="])
+        del args
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err) # will print something like "option -a not recognized"
@@ -144,7 +144,8 @@ def generate_table_line(col_info, extra_width = 0):
     return ret + "+";
     
 def calculate_text_width(text):
-    print(text, chardet.detect(text))
+    if len(text) == 0:
+        return 0
     unicode_text = unicode(text, chardet.detect(text)['encoding'])
     ret = 0;
     for c in unicode_text:
